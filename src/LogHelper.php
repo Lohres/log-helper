@@ -122,8 +122,8 @@ class LogHelper
             throw new RuntimeException(message: sprintf('Directory "%s" was not created', $path));
         }
         $log = new Logger(name: $name);
-        $handler = new StreamHandler(stream: $path . DIRECTORY_SEPARATOR . $file, level: $level)
-            ->setFormatter(new JsonFormatter());
+        $handler = new StreamHandler(stream: $path . DIRECTORY_SEPARATOR . $file, level: $level);
+        $handler->setFormatter(new JsonFormatter());
         $log->pushHandler(handler: $handler);
         return $log;
     }
