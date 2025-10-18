@@ -1,0 +1,29 @@
+{
+  "name": "lohres/log-helper",
+  "description": "Helper class for logging in lohres projects",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Christian Lührs",
+      "email": "info@lohres-log.de"
+    }
+  ],
+  "require": {
+    "monolog/monolog": "^3.9.0",
+    "ext-zip": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12",
+    "roave/security-advisories": "dev-latest"
+  },
+  "autoload": {
+    "psr-4": {
+      "Lohres\\LogHelper\\": "src/",
+      "Lohres\\LogHelperTests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "phpunittest": "vendor/bin/phpunit -c phpunit.xml"
+  }
+}
