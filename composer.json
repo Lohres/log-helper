@@ -1,6 +1,5 @@
 {
   "name": "lohres/log-helper",
-  "version": "1.0.0",
   "description": "Helper class for logging in lohres projects",
   "type": "project",
   "license": "MIT",
@@ -11,7 +10,7 @@
     }
   ],
   "require": {
-    "monolog/monolog": "3.9.0",
+    "monolog/monolog": "^3.9.0",
     "ext-zip": "*"
   },
   "require-dev": {
