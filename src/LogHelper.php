@@ -117,7 +117,7 @@ class LogHelper
         self::checkConfig();
         $path = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . date(format: "Ymd") . DIRECTORY_SEPARATOR . date(format: "H")
             . DIRECTORY_SEPARATOR . $name;
-        $file = date(format: "Ymd-H") . "_" . $name . ".log";
+        $file = date(format: "Ymd-H") . "_" . $name . ".json";
         if (!@mkdir(directory: $path, recursive: true) && !is_dir(filename: $path)) {
             throw new RuntimeException(message: sprintf('Directory "%s" was not created', $path));
         }
