@@ -26,7 +26,7 @@
   - Rueckgabewerte von `unlink`, `rmdir`, `scandir`, `opendir` strikt pruefen.
   - Bei Fehlern aussagekraeftige RuntimeExceptions mit Kontext liefern.
 
-- [ ] Kollisionen im ZIP vermeiden
+- [x] Kollisionen im ZIP vermeiden
   - Derzeit wird `basename(...)` als Entry-Name genutzt; gleichnamige Dateien aus verschiedenen Ordnern koennen kollidieren.
   - Relative Pfade im ZIP beibehalten.
 

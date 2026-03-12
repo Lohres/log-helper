@@ -110,4 +110,34 @@ final class LogHelperTest extends TestCase
             @unlink($tmpFile);
         }
     }
+
+    #[Test]
+    public function testBackupKeepsRelativePathsForDuplicateFileNames(): void
+    {
+        $dirA = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "a";
+        $dirB = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "b";
+        mkdir($dirA, 0777, true);
+        mkdir($dirB, 0777, true);
+        file_put_contents($dirA . DIRECTORY_SEPARATOR . "same.log", "one");
+        file_put_contents($dirB . DIRECTORY_SEPARATOR . "same.log", "two");
+
+        $this->assertTrue(LogHelper::backUpLogs());
+        $backupFiles = glob(pattern: LOHRES_LOG_BACKUP_PATH . DIRECTORY_SEPARATOR . "backup-" . date("Ymd") . "-*.zip");
+        $this->assertIsArray($backupFiles);
+        $this->assertNotEmpty($backupFiles);
+
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($backupFiles[0]) === true);
+        $entries = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            if (is_array($stat) && isset($stat["name"]) && is_string($stat["name"])) {
+                $entries[] = $stat["name"];
+            }
+        }
+        $zip->close();
+
+        $this->assertContains("a/same.log", $entries);
+        $this->assertContains("b/same.log", $entries);
+    }
 }

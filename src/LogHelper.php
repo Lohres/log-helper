@@ -18,6 +18,23 @@ use ZipArchive;
 class LogHelper
 {
     /**
+     * @param string $basePath
+     * @param string $fullPath
+     * @return string
+     */
+    private static function toZipEntryName(string $basePath, string $fullPath): string
+    {
+        $normalizedBase = rtrim($basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (str_starts_with($fullPath, $normalizedBase)) {
+            $relativePath = substr($fullPath, strlen($normalizedBase));
+            if (is_string($relativePath) && $relativePath !== "") {
+                return str_replace(search: DIRECTORY_SEPARATOR, replace: "/", subject: $relativePath);
+            }
+        }
+        return basename(str_replace(search: DIRECTORY_SEPARATOR, replace: "/", subject: $fullPath));
+    }
+
+    /**
      * @return void
      */
     private static function checkConfig(): void
@@ -158,7 +175,7 @@ class LogHelper
         foreach ($entries as $entry) {
             if (!$zip->addFile(
                 filepath: $entry,
-                entryname: basename(str_replace(search: DIRECTORY_SEPARATOR, replace: "/", subject: $entry))
+                entryname: self::toZipEntryName(LOHRES_LOG_PATH, $entry)
             )) {
                 throw new RuntimeException(message: sprintf('cannot add "%s" to zip', $entry));
             }
