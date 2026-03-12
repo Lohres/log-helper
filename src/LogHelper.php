@@ -189,11 +189,15 @@ class LogHelper
     /**
      * @param string $path
      * @param bool $force
+     * @param int $retentionDays
      * @return array
      */
-    public static function cleanUp(string $path, bool $force = false): array
+    public static function cleanUp(string $path, bool $force = false, int $retentionDays = 31): array
     {
         try {
+            if ($retentionDays < 0) {
+                throw new RuntimeException("retentionDays must be >= 0");
+            }
             $result = [
                 "folders" => 0,
                 "files" => 0
@@ -216,7 +220,7 @@ class LogHelper
                     }
                     $entryDate = (new DateTimeImmutable())->setTimestamp($entryTimestamp);
                     $ageInDays = (int)$entryDate->diff($today)->format("%a");
-                    if ($force || $ageInDays > 31) {
+                    if ($force || $ageInDays > $retentionDays) {
                         $subResult = self::removeDirsAndFiles(source: $entryPath);
                         $result["folders"] += $subResult["folders"];
                         $result["files"] += $subResult["files"];

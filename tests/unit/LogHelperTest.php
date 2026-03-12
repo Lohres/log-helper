@@ -87,6 +87,25 @@ final class LogHelperTest extends TestCase
     }
 
     #[Test]
+    public function testCleanupUsesCustomRetentionDays(): void
+    {
+        if (!is_dir(LOHRES_LOG_PATH)) {
+            mkdir(LOHRES_LOG_PATH, 0777, true);
+        }
+
+        $entryDir = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "retention-test";
+        mkdir($entryDir, 0777, true);
+        file_put_contents($entryDir . DIRECTORY_SEPARATOR . "entry.log", "entry");
+
+        $timestamp = strtotime("-5 days");
+        touch($entryDir . DIRECTORY_SEPARATOR . "entry.log", $timestamp);
+        touch($entryDir, $timestamp);
+
+        LogHelper::cleanUp(LOHRES_LOG_PATH, false, 3);
+        $this->assertDirectoryDoesNotExist($entryDir);
+    }
+
+    #[Test]
     #[RunInSeparateProcess]
     public function testGetLoggerThrowsWhenConfigMissing(): void
     {

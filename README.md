@@ -27,6 +27,7 @@ $logger->info("application started");
 
 LogHelper::backUpLogs();
 LogHelper::cleanUp(LOHRES_LOG_PATH);
+LogHelper::cleanUp(LOHRES_LOG_PATH, false, 14); // optional: eigene Retention in Tagen
 ```
 
 ## Log-Struktur
@@ -42,4 +43,5 @@ Backups werden unter folgendem Muster erzeugt:
 ## Cleanup-Verhalten
 
 - Standard: loescht nur Eintraege, die aelter als 31 Tage sind.
+- Optional: mit drittem Parameter kann die Retention in Tagen gesetzt werden.
 - Mit `force=true`: loescht alle Eintraege im angegebenen Pfad.

@@ -36,7 +36,7 @@
   - Minimalbeispiel fuer Setup und Nutzung (`LOHRES_LOG_PATH`, `LOHRES_LOG_BACKUP_PATH`).
   - Hinweis auf Pfadstruktur und Cleanup-Verhalten.
 
-- [ ] Konfigurierbare Retention einfuehren
+- [x] Konfigurierbare Retention einfuehren
   - Aufrufer sollte Aufbewahrungsdauer in Tagen setzen koennen.
   - Rueckwaertskompatibles Default-Verhalten beibehalten.
 
