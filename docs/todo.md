@@ -40,7 +40,7 @@
   - Aufrufer sollte Aufbewahrungsdauer in Tagen setzen koennen.
   - Rueckwaertskompatibles Default-Verhalten beibehalten.
 
-- [ ] CI-Check fuer Tests ergaenzen
+- [x] CI-Check fuer Tests ergaenzen
   - GitHub Action fuer `vendor/bin/phpunit -c phpunit.xml`.
 
 ## Optionaler Refactor
