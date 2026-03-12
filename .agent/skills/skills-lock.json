@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "php-testing": {
+      "source": "/home/christian/lohres-log/rest-service/.agent/skills/.shared/php-testing",
+      "sourceType": "local",
+      "computedHash": "5f5f2025d8556d0e715a0a26f54c7f27e0130c4948ed41b9c30a5889fe077102"
+    }
+  }
+}
