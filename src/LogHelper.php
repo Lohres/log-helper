@@ -52,21 +52,22 @@ class LogHelper
         $result = [];
         if (is_dir(filename: $source)) {
             $entries = scandir(directory: $source);
-            if (is_array(value: $entries)) {
-                self::removeDots($entries);
-                if (count(value: $entries) < 1) {
-                    return [];
-                }
-                foreach ($entries as $entry) {
-                    if (is_dir(filename: $source . DIRECTORY_SEPARATOR . $entry)) {
-                        $subArray = self::getAllFiles(source: $source . DIRECTORY_SEPARATOR . $entry);
-                        foreach ($subArray as $subEntry) {
-                            $result[] = $subEntry;
-                        }
-                        continue;
+            if (!is_array(value: $entries)) {
+                throw new RuntimeException(message: sprintf('cannot scan directory "%s"', $source));
+            }
+            self::removeDots($entries);
+            if (count(value: $entries) < 1) {
+                return [];
+            }
+            foreach ($entries as $entry) {
+                if (is_dir(filename: $source . DIRECTORY_SEPARATOR . $entry)) {
+                    $subArray = self::getAllFiles(source: $source . DIRECTORY_SEPARATOR . $entry);
+                    foreach ($subArray as $subEntry) {
+                        $result[] = $subEntry;
                     }
-                    $result[] = $source . DIRECTORY_SEPARATOR . $entry;
+                    continue;
                 }
+                $result[] = $source . DIRECTORY_SEPARATOR . $entry;
             }
         }
         sort($result);
@@ -85,6 +86,9 @@ class LogHelper
         ];
         if (is_dir(filename: $source)) {
             $dir = opendir(directory: $source);
+            if ($dir === false) {
+                throw new RuntimeException(message: sprintf('cannot open directory "%s"', $source));
+            }
             while (false !== ($file = readdir(dir_handle: $dir))) {
                 if (($file !== ".") && ($file !== "..")) {
                     $full = $source . DIRECTORY_SEPARATOR . $file;
@@ -93,16 +97,22 @@ class LogHelper
                         $result["folders"] += $subResult["folders"];
                         $result["files"] += $subResult["files"];
                     } else {
-                        unlink(filename: $full);
+                        if (!unlink(filename: $full)) {
+                            throw new RuntimeException(message: sprintf('cannot remove file "%s"', $full));
+                        }
                         $result["files"]++;
                     }
                 }
             }
             closedir(dir_handle: $dir);
-            rmdir(directory: $source);
+            if (!rmdir(directory: $source)) {
+                throw new RuntimeException(message: sprintf('cannot remove directory "%s"', $source));
+            }
             $result["folders"]++;
         } else {
-            unlink(filename: $source);
+            if (!unlink(filename: $source)) {
+                throw new RuntimeException(message: sprintf('cannot remove file "%s"', $source));
+            }
             $result["files"]++;
         }
         return $result;
@@ -119,7 +129,7 @@ class LogHelper
         $path = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . date(format: "Ymd") . DIRECTORY_SEPARATOR . date(format: "H")
             . DIRECTORY_SEPARATOR . $name;
         $file = date(format: "Ymd-H") . "_" . $name . ".json";
-        if (!@mkdir(directory: $path, recursive: true) && !is_dir(filename: $path)) {
+        if (!is_dir($path) && !mkdir(directory: $path, recursive: true)) {
             throw new RuntimeException(message: sprintf('Directory "%s" was not created', $path));
         }
         $log = new Logger(name: $name);
@@ -137,7 +147,7 @@ class LogHelper
         self::checkConfig();
         $zip = new ZipArchive();
         $path = LOHRES_LOG_BACKUP_PATH;
-        if (!@mkdir(directory: $path, recursive: true) && !is_dir(filename: $path)) {
+        if (!is_dir($path) && !mkdir(directory: $path, recursive: true)) {
             throw new RuntimeException(message: sprintf('Directory "%s" was not created', $path));
         }
         $filename = $path . DIRECTORY_SEPARATOR . "backup-" . date(format: "Ymd-His") . ".zip";
@@ -146,12 +156,16 @@ class LogHelper
         }
         $entries = self::getAllFiles(source: LOHRES_LOG_PATH);
         foreach ($entries as $entry) {
-            $zip->addFile(
+            if (!$zip->addFile(
                 filepath: $entry,
                 entryname: basename(str_replace(search: DIRECTORY_SEPARATOR, replace: "/", subject: $entry))
-            );
+            )) {
+                throw new RuntimeException(message: sprintf('cannot add "%s" to zip', $entry));
+            }
         }
-        $zip->close();
+        if (!$zip->close()) {
+            throw new RuntimeException(message: sprintf('cannot finalize backup "%s"', $filename));
+        }
         return true;
     }
 
@@ -170,24 +184,25 @@ class LogHelper
             if (is_dir(filename: $path)) {
                 $today = new DateTimeImmutable("today");
                 $entries = scandir(directory: $path);
-                if (is_array(value: $entries)) {
-                    self::removeDots($entries);
-                    if (count(value: $entries) < 1) {
-                        return $result;
+                if (!is_array(value: $entries)) {
+                    throw new RuntimeException(message: sprintf('cannot scan directory "%s"', $path));
+                }
+                self::removeDots($entries);
+                if (count(value: $entries) < 1) {
+                    return $result;
+                }
+                foreach ($entries as $entry) {
+                    $entryPath = $path . DIRECTORY_SEPARATOR . $entry;
+                    $entryTimestamp = filemtime($entryPath);
+                    if (!is_int($entryTimestamp)) {
+                        throw new RuntimeException(message: sprintf('cannot read modification time for "%s"', $entryPath));
                     }
-                    foreach ($entries as $entry) {
-                        $entryPath = $path . DIRECTORY_SEPARATOR . $entry;
-                        $entryTimestamp = filemtime($entryPath);
-                        if (!is_int($entryTimestamp)) {
-                            continue;
-                        }
-                        $entryDate = (new DateTimeImmutable())->setTimestamp($entryTimestamp);
-                        $ageInDays = (int)$entryDate->diff($today)->format("%a");
-                        if ($force || $ageInDays > 31) {
-                            $subResult = self::removeDirsAndFiles(source: $path . DIRECTORY_SEPARATOR . $entry);
-                            $result["folders"] += $subResult["folders"];
-                            $result["files"] += $subResult["files"];
-                        }
+                    $entryDate = (new DateTimeImmutable())->setTimestamp($entryTimestamp);
+                    $ageInDays = (int)$entryDate->diff($today)->format("%a");
+                    if ($force || $ageInDays > 31) {
+                        $subResult = self::removeDirsAndFiles(source: $entryPath);
+                        $result["folders"] += $subResult["folders"];
+                        $result["files"] += $subResult["files"];
                     }
                 }
             }

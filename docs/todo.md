@@ -22,7 +22,7 @@
   - `cleanUp()` fuer `force=false` und Altersgrenze testen.
   - Verifikation des ZIP-Inhalts (nicht nur Dateiexistenz).
 
-- [ ] Robustheit bei Dateisystemoperationen verbessern
+- [x] Robustheit bei Dateisystemoperationen verbessern
   - Rueckgabewerte von `unlink`, `rmdir`, `scandir`, `opendir` strikt pruefen.
   - Bei Fehlern aussagekraeftige RuntimeExceptions mit Kontext liefern.
 
