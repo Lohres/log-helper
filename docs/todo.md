@@ -16,7 +16,7 @@
 
 ## Prioritaet Mittel
 
-- [ ] Testabdeckung erweitern
+- [x] Testabdeckung erweitern
   - Fehlerfall: fehlende Konstanten.
   - Fehlerfall: nicht beschreibbare Verzeichnisse.
   - `cleanUp()` fuer `force=false` und Altersgrenze testen.
