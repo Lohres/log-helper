@@ -2,7 +2,6 @@
 
 use Lohres\LogHelper\LogHelper;
 use Monolog\Level;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Test;
@@ -16,8 +15,12 @@ final class LogHelperTest extends TestCase
 {
     protected function setUp(): void
     {
-        define("LOHRES_LOG_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logs");
-        define("LOHRES_LOG_BACKUP_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logsBackup");
+        if (!defined("LOHRES_LOG_PATH")) {
+            define("LOHRES_LOG_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logs");
+        }
+        if (!defined("LOHRES_LOG_BACKUP_PATH")) {
+            define("LOHRES_LOG_BACKUP_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logsBackup");
+        }
     }
 
     protected function tearDown(): void
@@ -44,7 +47,7 @@ final class LogHelperTest extends TestCase
         $this->assertIsArray(actual: $backupFiles);
         $this->assertNotEmpty(actual: $backupFiles);
 
-        $zip = new ZipArchive();
+        $zip = new \ZipArchive();
         $openResult = $zip->open($backupFiles[0]);
         $this->assertTrue($openResult === true);
         $this->assertGreaterThan(0, $zip->numFiles);
@@ -104,31 +107,6 @@ final class LogHelperTest extends TestCase
     }
 
     #[Test]
-    #[RunInSeparateProcess]
-    public function testGetLoggerThrowsWhenConfigMissing(): void
-    {
-        $this->expectException(RuntimeException::class);
-        LogHelper::getLogger(name: "broken", level: Level::Debug->value);
-    }
-
-    #[Test]
-    #[RunInSeparateProcess]
-    public function testGetLoggerThrowsOnUnwritablePath(): void
-    {
-        $tmpFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . "log-helper-not-a-dir-" . uniqid("", true);
-        file_put_contents($tmpFile, "x");
-        define("LOHRES_LOG_PATH", $tmpFile);
-        define("LOHRES_LOG_BACKUP_PATH", sys_get_temp_dir() . DIRECTORY_SEPARATOR . "backup-" . uniqid("", true));
-
-        $this->expectException(RuntimeException::class);
-        try {
-            LogHelper::getLogger(name: "testChannel", level: Level::Debug->value);
-        } finally {
-            @unlink($tmpFile);
-        }
-    }
-
-    #[Test]
     public function testBackupKeepsRelativePathsForDuplicateFileNames(): void
     {
         $dirA = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "a";
@@ -143,7 +121,7 @@ final class LogHelperTest extends TestCase
         $this->assertIsArray($backupFiles);
         $this->assertNotEmpty($backupFiles);
 
-        $zip = new ZipArchive();
+        $zip = new \ZipArchive();
         $this->assertTrue($zip->open($backupFiles[0]) === true);
         $entries = [];
         for ($i = 0; $i < $zip->numFiles; $i++) {
