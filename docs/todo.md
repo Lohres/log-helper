@@ -32,7 +32,7 @@
 
 ## Prioritaet Niedrig
 
-- [ ] README erweitern
+- [x] README erweitern
   - Minimalbeispiel fuer Setup und Nutzung (`LOHRES_LOG_PATH`, `LOHRES_LOG_BACKUP_PATH`).
   - Hinweis auf Pfadstruktur und Cleanup-Verhalten.
 
