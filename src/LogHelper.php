@@ -190,7 +190,7 @@ class LogHelper
             }
             return $result;
         } catch (Throwable $exception) {
-            die($exception->getMessage());
+            throw new RuntimeException(message: "cleanup failed", previous: $exception);
         }
     }
 }

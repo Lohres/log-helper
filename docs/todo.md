@@ -2,7 +2,7 @@
 
 ## Prioritaet Hoch
 
-- [ ] `cleanUp()` ohne `die()` umsetzen
+- [x] `cleanUp()` ohne `die()` umsetzen
   - Statt Prozessabbruch Exceptions werfen oder kontrolliert rueckgeben.
   - Fehlerpfade testbar machen.
 
