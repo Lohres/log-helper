@@ -2,6 +2,7 @@
 
 namespace Lohres\LogHelper;
 
+use DateTimeImmutable;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -170,7 +171,7 @@ class LogHelper
                 "files" => 0
             ];
             if (is_dir(filename: $path)) {
-                $date = date(format: "Ymd");
+                $today = new DateTimeImmutable("today");
                 $entries = scandir(directory: $path);
                 if (is_array(value: $entries)) {
                     self::removeDots($entries);
@@ -178,9 +179,14 @@ class LogHelper
                         return $result;
                     }
                     foreach ($entries as $entry) {
-                        $fct = (int)date("Ymd", filectime($path . DIRECTORY_SEPARATOR . $entry));
-                        $diff = (int)$date - $fct;
-                        if ($force || $diff > 31) {
+                        $entryPath = $path . DIRECTORY_SEPARATOR . $entry;
+                        $entryTimestamp = filemtime($entryPath);
+                        if (!is_int($entryTimestamp)) {
+                            continue;
+                        }
+                        $entryDate = (new DateTimeImmutable())->setTimestamp($entryTimestamp);
+                        $ageInDays = (int)$entryDate->diff($today)->format("%a");
+                        if ($force || $ageInDays > 31) {
                             $subResult = self::removeDirsAndFiles(source: $path . DIRECTORY_SEPARATOR . $entry);
                             $result["folders"] += $subResult["folders"];
                             $result["files"] += $subResult["files"];

@@ -6,7 +6,7 @@
   - Statt Prozessabbruch Exceptions werfen oder kontrolliert rueckgeben.
   - Fehlerpfade testbar machen.
 
-- [ ] Retention-Logik in `cleanUp()` korrigieren
+- [x] Retention-Logik in `cleanUp()` korrigieren
   - Aktuell wird `YYYYMMDD` numerisch subtrahiert (`$date - $fct`), was um Monatswechsel falsch ist.
   - Auf echte Datumsdifferenz (z. B. `DateTimeImmutable`) umstellen.
 
