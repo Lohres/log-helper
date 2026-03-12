@@ -45,5 +45,5 @@
 
 ## Optionaler Refactor
 
-- [ ] Statische Hilfsklasse schrittweise entkoppeln
+- [x] Statische Hilfsklasse schrittweise entkoppeln
   - Dateisystemzugriffe kapseln (Adapter/Service), um Unit-Tests ohne echtes FS zu vereinfachen.
