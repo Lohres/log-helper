@@ -10,12 +10,17 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(LogHelper::class)]
 #[CoversMethod(LogHelper::class, "getLogger")]
 #[CoversMethod(LogHelper::class, "backUpLogs")]
+#[CoversMethod(LogHelper::class, "cleanUp")]
 final class LogHelperTest extends TestCase
 {
     protected function setUp(): void
     {
-        define("LOHRES_LOG_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logs");
-        define("LOHRES_LOG_BACKUP_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logsBackup");
+        if (!defined("LOHRES_LOG_PATH")) {
+            define("LOHRES_LOG_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logs");
+        }
+        if (!defined("LOHRES_LOG_BACKUP_PATH")) {
+            define("LOHRES_LOG_BACKUP_PATH", realpath(".") . DIRECTORY_SEPARATOR . "logsBackup");
+        }
     }
 
     protected function tearDown(): void
@@ -34,12 +39,100 @@ final class LogHelperTest extends TestCase
     public function testLogHelper(): void
     {
         $logger = LogHelper::getLogger(name: "testChannel", level: Level::Debug->value);
-        $logger->info(message: "info");
+        $logger->info(message: "info", context: ["id" => 42]);
         $this->assertDirectoryExists(directory: LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . date("Ymd"));
         $backUp = LogHelper::backUpLogs();
         $this->assertTrue(condition: $backUp);
-        $this->assertFileExists(
-            filename: LOHRES_LOG_BACKUP_PATH . DIRECTORY_SEPARATOR . "backup-" . date(format: "Ymd") . ".zip"
-        );
+        $backupFiles = glob(pattern: LOHRES_LOG_BACKUP_PATH . DIRECTORY_SEPARATOR . "backup-" . date("Ymd") . "-*.zip");
+        $this->assertIsArray(actual: $backupFiles);
+        $this->assertNotEmpty(actual: $backupFiles);
+
+        $zip = new \ZipArchive();
+        $openResult = $zip->open($backupFiles[0]);
+        $this->assertTrue($openResult === true);
+        $this->assertGreaterThan(0, $zip->numFiles);
+        $fileContent = $zip->getFromIndex(0);
+        $this->assertIsString($fileContent);
+        $this->assertStringContainsString('"message":"info"', $fileContent);
+        $zip->close();
+    }
+
+    #[Test]
+    public function testCleanupHonorsRetentionWithoutForce(): void
+    {
+        if (!is_dir(LOHRES_LOG_PATH)) {
+            mkdir(LOHRES_LOG_PATH, 0777, true);
+        }
+
+        $oldDir = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "old";
+        $newDir = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "new";
+        mkdir($oldDir, 0777, true);
+        mkdir($newDir, 0777, true);
+        file_put_contents($oldDir . DIRECTORY_SEPARATOR . "old.log", "old");
+        file_put_contents($newDir . DIRECTORY_SEPARATOR . "new.log", "new");
+
+        $oldTimestamp = strtotime("-40 days");
+        $newTimestamp = strtotime("-1 day");
+        touch($oldDir . DIRECTORY_SEPARATOR . "old.log", $oldTimestamp);
+        touch($newDir . DIRECTORY_SEPARATOR . "new.log", $newTimestamp);
+        touch($oldDir, $oldTimestamp);
+        touch($newDir, $newTimestamp);
+
+        $result = LogHelper::cleanUp(LOHRES_LOG_PATH, false);
+
+        $this->assertTrue(is_array($result));
+        $this->assertArrayHasKey("folders", $result);
+        $this->assertArrayHasKey("files", $result);
+        $this->assertDirectoryDoesNotExist($oldDir);
+        $this->assertDirectoryExists($newDir);
+    }
+
+    #[Test]
+    public function testCleanupUsesCustomRetentionDays(): void
+    {
+        if (!is_dir(LOHRES_LOG_PATH)) {
+            mkdir(LOHRES_LOG_PATH, 0777, true);
+        }
+
+        $entryDir = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "retention-test";
+        mkdir($entryDir, 0777, true);
+        file_put_contents($entryDir . DIRECTORY_SEPARATOR . "entry.log", "entry");
+
+        $timestamp = strtotime("-5 days");
+        touch($entryDir . DIRECTORY_SEPARATOR . "entry.log", $timestamp);
+        touch($entryDir, $timestamp);
+
+        LogHelper::cleanUp(LOHRES_LOG_PATH, false, 3);
+        $this->assertDirectoryDoesNotExist($entryDir);
+    }
+
+    #[Test]
+    public function testBackupKeepsRelativePathsForDuplicateFileNames(): void
+    {
+        $dirA = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "a";
+        $dirB = LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . "b";
+        mkdir($dirA, 0777, true);
+        mkdir($dirB, 0777, true);
+        file_put_contents($dirA . DIRECTORY_SEPARATOR . "same.log", "one");
+        file_put_contents($dirB . DIRECTORY_SEPARATOR . "same.log", "two");
+
+        $this->assertTrue(LogHelper::backUpLogs());
+        $backupFiles = glob(pattern: LOHRES_LOG_BACKUP_PATH . DIRECTORY_SEPARATOR . "backup-" . date("Ymd") . "-*.zip");
+        $this->assertIsArray($backupFiles);
+        $this->assertNotEmpty($backupFiles);
+
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($backupFiles[0]) === true);
+        $entries = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            if (is_array($stat) && isset($stat["name"]) && is_string($stat["name"])) {
+                $entries[] = $stat["name"];
+            }
+        }
+        $zip->close();
+
+        $this->assertContains("a/same.log", $entries);
+        $this->assertContains("b/same.log", $entries);
     }
 }
