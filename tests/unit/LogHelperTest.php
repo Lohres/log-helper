@@ -38,8 +38,8 @@ final class LogHelperTest extends TestCase
         $this->assertDirectoryExists(directory: LOHRES_LOG_PATH . DIRECTORY_SEPARATOR . date("Ymd"));
         $backUp = LogHelper::backUpLogs();
         $this->assertTrue(condition: $backUp);
-        $this->assertFileExists(
-            filename: LOHRES_LOG_BACKUP_PATH . DIRECTORY_SEPARATOR . "backup-" . date(format: "Ymd") . ".zip"
-        );
+        $backupFiles = glob(pattern: LOHRES_LOG_BACKUP_PATH . DIRECTORY_SEPARATOR . "backup-" . date("Ymd") . "-*.zip");
+        $this->assertIsArray(actual: $backupFiles);
+        $this->assertNotEmpty(actual: $backupFiles);
     }
 }

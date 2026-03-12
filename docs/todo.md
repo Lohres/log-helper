@@ -10,7 +10,7 @@
   - Aktuell wird `YYYYMMDD` numerisch subtrahiert (`$date - $fct`), was um Monatswechsel falsch ist.
   - Auf echte Datumsdifferenz (z. B. `DateTimeImmutable`) umstellen.
 
-- [ ] Backup-Dateinamen eindeutig machen
+- [x] Backup-Dateinamen eindeutig machen
   - `backUpLogs()` ueberschreibt taeglich dieselbe Datei `backup-YYYYMMDD.zip`.
   - Optional Stunde/Minute/Sekunde oder Suffix verwenden.
 

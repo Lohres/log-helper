@@ -140,10 +140,7 @@ class LogHelper
         if (!@mkdir(directory: $path, recursive: true) && !is_dir(filename: $path)) {
             throw new RuntimeException(message: sprintf('Directory "%s" was not created', $path));
         }
-        $filename = $path . DIRECTORY_SEPARATOR . "backup-" . date(format: "Ymd") . ".zip";
-        if (file_exists(filename: $filename)) {
-            unlink(filename: $filename);
-        }
+        $filename = $path . DIRECTORY_SEPARATOR . "backup-" . date(format: "Ymd-His") . ".zip";
         if ($zip->open(filename: $filename, flags: ZipArchive::CREATE) !== true) {
             throw new RuntimeException(message: sprintf('cannot open "%s"', $filename));
         }
